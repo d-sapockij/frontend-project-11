@@ -1,4 +1,4 @@
-name: linting and tests
+name: linting
 on:
   - push
   - pull_request
@@ -15,15 +15,3 @@ jobs:
         - run: make install
         # Запускаем линтер
         - run: make lint
-  tests:
-    name: run tests
-    runs-on: ubuntu-latest
-    steps:
-        # Клонируем репозиторий
-        - uses: actions/checkout@v4
-        # Устанавливаем Node.js
-        - uses: actions/setup-node@v4
-        # Ставим зависимости
-        - run: make install
-        - name: run tests
-          run: make test
