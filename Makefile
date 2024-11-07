@@ -1,6 +1,5 @@
 install: 
-	npm ci
-	npm link
+	npm i
 publish:
 	npm publish --dry-run
 lint:
