@@ -7,11 +7,17 @@
     </head>
     <body>
         <div class="container py-4 px-3 mx-auto">
-            <h1>Hello, Bootstrap and Webpack!</h1>
-            <div class="input-group mb-3">
-                <input type="text" class="form-control" placeholder="RSS" aria-label="RSS" aria-describedby="basic-addon">
-                <button class="btn btn-primary">Add RSS</button>
-            </div>
+            <h1>RSS агрегатор</h1>
+            <form class="form">
+                <div class="row mb-3">
+                    <div class="col">
+                        <input type="text" class="col form-control" name="url" required placeholder="RSS" aria-label="RSS" aria-describedby="basic-addon">
+                    </div>
+                    <div class="col">
+                        <button type="submit" class=" col btn btn-primary">Add RSS</button>
+                    </div>
+                </div>
+            </form>
         </div>
     </body>
     
