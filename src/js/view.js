@@ -1,12 +1,27 @@
 import onChange from 'on-change';
 import { string, setLocale } from 'yup';
 import i18next from 'i18next';
+import axios from 'axios';
 
 import ru from './locales/ru.js';
+
+const xmlParse = (str) => {
+    const parser = new DOMParser();
+    return parser.parseFromString(str, 'application/xml');
+    
+    //Для обработки ошибок
+    // const errorNode = doc.querySelector("parsererror");
+    // if (errorNode) {
+    // // parsing failed
+    // } else {
+    // // parsing succeeded
+    // }
+};
 
 export default () => {
     const state = {
         processState: 'default',    
+        urls: [],
         items: [],
         error: 'invalid_url',
     };
@@ -80,15 +95,35 @@ export default () => {
         
         schema.validate(url)
             .then((url) => {
-                if (state.items.includes(url)) {
+                if (state.urls.includes(url)) {
                     throw new Error('duplicated_url');
                 }
-                watchedState.items.push(url);
-                watchedState.processState = 'default';
+                
+                axios.get(`https://allorigins.hexlet.app/get?url=${url}`)
+                // axios.get('https://allorigins.hexlet.app/get?disableCache=true&url=https://lorem-rss.hexlet.app/feed')
+                    .then((response) => {
+                        console.log(response.data.contents)
+                        const parsedFeed = xmlParse(response.data.contents);
+                        const items = parsedFeed.querySelectorAll('item');
+                        const itemsInfo = Array.from(items).map((item) => {
+                            const title = item.querySelector('title').textContent;
+                            const description = item.querySelector('description').textContent;
+                            const link = item.querySelector('link').textContent;
+                            return { title, description, link };
+                        });
+                        console.log(itemsInfo)
+                    })
+                    .catch((error) => {
+                        // console.error(error)
+                        // throw new Error('network_error');
+                    })
+                // watchedState.urls.push(url);
+                // watchedState.processState = 'default';
             })
             .catch((error) => {
                 watchedState.error = error.message;
                 watchedState.processState = 'error';
+                // console.error(error)
                 // console.log(state.error)
                 // throw error;
             });
