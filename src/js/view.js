@@ -7,21 +7,22 @@ import ru from './locales/ru.js';
 
 const xmlParse = (str) => {
     const parser = new DOMParser();
-    return parser.parseFromString(str, 'application/xml');
+    const parsedXml = parser.parseFromString(str, 'application/xml');
     
-    //Для обработки ошибок
-    // const errorNode = doc.querySelector("parsererror");
-    // if (errorNode) {
-    // // parsing failed
-    // } else {
-    // // parsing succeeded
-    // }
+    // Для обработки ошибок
+    const errorNode = parsedXml.querySelector("parsererror");
+    if (errorNode) {
+        throw new Error('invalid_xml');
+    } else {
+        return parsedXml;
+    }
 };
 
 export default () => {
     const state = {
         processState: 'default',    
         urls: [],
+        feeds: [],
         items: [],
         error: 'invalid_url',
     };
@@ -31,8 +32,9 @@ export default () => {
     const form = document.querySelector('#form');
     const input = form.elements.url;
     const button = form.elements.button;
-    const errorEl = document.querySelector('#error');
+    const feedbackEl = document.querySelector('#feedback');
 
+    // тут инстансы добавить придется думаю
     i18next.init({
         lng: 'ru',
         debug: true,
@@ -52,7 +54,7 @@ export default () => {
             switch (value) {
                 case 'default':
                     input.classList.remove('is-invalid');
-                    errorEl.textContent = '';
+                    feedbackEl.textContent = '';
                     input.value = '';
                     input.focus();
                     break;
@@ -67,7 +69,7 @@ export default () => {
                     break;
                 case 'error':
                     input.classList.add('is-invalid');
-                    errorEl.textContent = i18next.t(`errors.${state.error}`);
+                    feedbackEl.textContent = i18next.t(`errors.${state.error}`);
                     input.focus();
                     input.select();
                     break;
@@ -98,34 +100,37 @@ export default () => {
                 if (state.urls.includes(url)) {
                     throw new Error('duplicated_url');
                 }
-                
-                axios.get(`https://allorigins.hexlet.app/get?url=${url}`)
-                // axios.get('https://allorigins.hexlet.app/get?disableCache=true&url=https://lorem-rss.hexlet.app/feed')
-                    .then((response) => {
-                        console.log(response.data.contents)
-                        const parsedFeed = xmlParse(response.data.contents);
-                        const items = parsedFeed.querySelectorAll('item');
-                        const itemsInfo = Array.from(items).map((item) => {
-                            const title = item.querySelector('title').textContent;
-                            const description = item.querySelector('description').textContent;
-                            const link = item.querySelector('link').textContent;
-                            return { title, description, link };
-                        });
-                        console.log(itemsInfo)
-                    })
-                    .catch((error) => {
-                        // console.error(error)
-                        // throw new Error('network_error');
-                    })
-                // watchedState.urls.push(url);
-                // watchedState.processState = 'default';
+                const request = axios.get(`https://allorigins.hexlet.app/get?url=${url}`)
+                    .catch(() => {
+                        throw new Error('network_error');
+                    });
+                return request;
+            })
+            .then((response) => {
+                // console.log(response.data.contents)
+                const parsedFeed = xmlParse(response.data.contents);
+                const feedTitle = parsedFeed.querySelector('title').textContent;
+                const feedDescription = parsedFeed.querySelector('description').textContent;
+                const items = parsedFeed.querySelectorAll('item');
+                const itemsInfo = Array.from(items).map((item) => {
+                    const title = item.querySelector('title').textContent;
+                    const description = item.querySelector('description').textContent;
+                    const link = item.querySelector('link').textContent;
+                    return { title, description, link };
+                });
+                // console.log(itemsInfo)
+                watchedState.urls.push(url);
+                watchedState.feeds.push({ title: feedTitle, decription: feedDescription });
+                watchedState.items = [...watchedState.items, ...itemsInfo];
+                watchedState.processState = 'default';
+                console.log(state)
             })
             .catch((error) => {
                 watchedState.error = error.message;
                 watchedState.processState = 'error';
                 // console.error(error)
                 // console.log(state.error)
-                // throw error;
+                throw error;
             });
     });
 };

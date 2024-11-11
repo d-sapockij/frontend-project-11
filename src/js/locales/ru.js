@@ -13,8 +13,10 @@ export default {
         button: 'Добавить',
       },
       errors: {
-        duplicated_url: 'Данный URL уже добавлен',
+        duplicated_url: 'RSS уже существует',
         invalid_url: 'Ссылка должна быть валидным URL',
-    }
+        invalid_xml: 'Ресурс не содержит валидный RSS',
+        network_error: 'Похоже, проблема с сетью... Попробуйте позже',
+      },
     },
   };
