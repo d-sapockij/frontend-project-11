@@ -8,15 +8,17 @@
     <body>
         <div class="container py-4 px-3 mx-auto">
             <h1>RSS агрегатор</h1>
-            <form class="form">
+            <p class="lead" id="subtitle">Начните читать RSS сегодня!</p>
+            <form class="form" id="form">
                 <div class="row mb-3">
                     <div class="col">
                         <input type="text" class="col form-control" name="url" required placeholder="RSS" aria-label="RSS" aria-describedby="basic-addon">
                     </div>
                     <div class="col">
-                        <button type="submit" class=" col btn btn-primary">Add RSS</button>
+                        <button type="submit" name="button" class=" col btn btn-primary">Add RSS</button>
                     </div>
                 </div>
+                <p class="feedback m-0 small text-danger" id="error"></p>
             </form>
         </div>
     </body>

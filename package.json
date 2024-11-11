@@ -32,6 +32,7 @@
     "workbox-webpack-plugin": "^7.3.0"
   },
   "dependencies": {
+    "i18next": "^23.16.5",
     "on-change": "^5.0.1",
     "yup": "^1.4.0"
   }
