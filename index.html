@@ -1,30 +1,39 @@
 <!DOCTYPE html>
 <html>
-    <head>
-        <meta charset="utf-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <title>Webpack App</title>
-    </head>
-    <body>
-        <div class="container py-4 px-3 mx-auto">
-            <h1>RSS агрегатор</h1>
-            <p class="lead" id="subtitle">Начните читать RSS сегодня!</p>
-            <form class="form" id="form">
-                <div class="row mb-3">
-                    <div class="col">
-                        <input type="text" class="col form-control" name="url" required placeholder="RSS" aria-label="RSS" aria-describedby="basic-addon">
-                    </div>
-                    <div class="col">
-                        <button type="submit" name="button" class=" col btn btn-primary">Add RSS</button>
-                    </div>
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Webpack App</title>
+</head>
+
+<body>
+    <div class="container py-4 px-3 mx-auto">
+        <h1>RSS агрегатор</h1>
+        <p class="lead" id="subtitle">Начните читать RSS сегодня!</p>
+        <form class="form" id="form">
+            <div class="row mb-3">
+                <div class="col">
+                    <input type="text" class="col form-control" name="url" required placeholder="RSS" aria-label="RSS"
+                        aria-describedby="basic-addon">
                 </div>
-                <p class="feedback m-0 small text-danger" id="feedback"></p>
-                <p class="mt-2 mb-0 text-muted">Пример: https://lorem-rss.hexlet.app/feed</p>
-            </form>
-        </div>
-    </body>
-    
-    <!-- <script>
+                <div class="col">
+                    <button type="submit" name="button" class=" col btn btn-primary">Add RSS</button>
+                </div>
+            </div>
+            <p class="feedback m-0 small text-danger" id="feedback"></p>
+            <p class="mt-2 mb-0 text-muted">Пример: https://lorem-rss.hexlet.app/feed</p>
+            <section class="container-fluid container-xxl p-5">
+                <div class="row">
+                    <div class="col-md-10 col-lg-8 order-1 mx-auto posts" id="posts"></div>
+                    <div class="col-md-10 col-lg-4 mx-auto order-0 order-lg-1 feeds" id="feeds"></div>
+                </div>
+            </section>
+        </form>
+    </div>
+</body>
+
+<!-- <script>
         if ("serviceWorker" in navigator) {
             window.addEventListener("load", () => {
                 navigator.serviceWorker
@@ -38,4 +47,5 @@
             });
         }
     </script> -->
+
 </html>

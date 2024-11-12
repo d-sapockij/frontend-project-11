@@ -18,13 +18,31 @@ const xmlParse = (str) => {
     }
 };
 
+const createCardElem = () => {
+    const card = document.createElement('div');
+    const cardBody = document.createElement('div');
+    const cardTitle = document.createElement('h2');
+    const listGroup = document.createElement('ul');
+
+    card.classList.add('card', 'border-0');
+    cardBody.classList.add('card-body');
+    cardTitle.classList.add('card-title', 'h4');
+    listGroup.classList.add('list-group', 'border-0', 'rounded-0');
+
+    card.appendChild(cardBody);
+    cardBody.appendChild(cardTitle);
+    card.appendChild(listGroup);
+
+    return { card, cardTitle, listGroup };
+}
+
 export default () => {
     const state = {
         processState: 'default',    
         urls: [],
         feeds: [],
-        items: [],
-        error: 'invalid_url',
+        posts: [],
+        error: '',
     };
 
     const h1 = document.querySelector('h1');
@@ -33,6 +51,9 @@ export default () => {
     const input = form.elements.url;
     const button = form.elements.button;
     const feedbackEl = document.querySelector('#feedback');
+
+    const postsContainer = document.querySelector('#posts');
+    const feedsContainer = document.querySelector('#feeds');
 
     // тут инстансы добавить придется думаю
     i18next.init({
@@ -79,6 +100,50 @@ export default () => {
                     throw new Error(`Unknown process state: ${value}`);
             }
         };
+
+        if (path === 'posts') {
+            postsContainer.innerHTML = '';
+            const { card, cardTitle, listGroup } = createCardElem();
+            postsContainer.appendChild(card);
+            cardTitle.innerText = i18next.t('ui.posts.title');
+            const postsElems = state.posts.map(({ title, description, link }) => {
+                const elem = document.createElement('li');
+                elem.classList.add('list-group-item', 'd-flex', 'justify-content-between', 'align-items-start', 'border-0', 'border-end-0');
+                const linkElem = document.createElement('a');
+                linkElem.href = link;
+                linkElem.classList.add('fw-bold');
+                linkElem.target = '_blank';
+                linkElem.rel = 'noopener noreferrer';
+                linkElem.textContent = title;
+                elem.appendChild(linkElem);
+                return elem;
+            });
+            listGroup.replaceChildren(...postsElems);
+        };
+
+        if (path === 'feeds') {
+            feedsContainer.innerHTML = '';
+            const { card, cardTitle, listGroup } = createCardElem();
+            feedsContainer.appendChild(card);
+            cardTitle.innerText = i18next.t('ui.feeds.title');
+            const feedsElems = state.feeds.map(({ title, description }) => {
+                const elem = document.createElement('li');
+                elem.classList.add('list-group-item', 'border-0', 'border-end-0');
+                const elemTitle = document.createElement('h3');
+                elemTitle.classList.add('h6', 'm-0');
+                elemTitle.textContent = title;
+                const elemText = document.createElement('p');
+                elemText.classList.add('m-0', 'small', 'text-black-50');
+                elemText.textContent = description;
+
+                elem.replaceChildren(elemTitle, elemText);
+                
+                console.log('decsdasdsad', description)
+
+                return elem;
+            });
+            listGroup.replaceChildren(...feedsElems);
+        };
     }
 
     const watchedState = onChange(state, render);
@@ -111,6 +176,9 @@ export default () => {
             .then((response) => {
                 // console.log(response.data.contents)
                 const parsedFeed = xmlParse(response.data.contents);
+                
+                console.log(parsedFeed)
+
                 const feedTitle = parsedFeed.querySelector('title').textContent;
                 const feedDescription = parsedFeed.querySelector('description').textContent;
                 const items = parsedFeed.querySelectorAll('item');
@@ -122,8 +190,8 @@ export default () => {
                 });
                 // console.log(itemsInfo)
                 watchedState.urls.push(url);
-                watchedState.feeds.push({ title: feedTitle, decription: feedDescription });
-                watchedState.items = [...watchedState.items, ...itemsInfo];
+                watchedState.feeds.push({ title: feedTitle, description: feedDescription });
+                watchedState.posts = [...watchedState.posts, ...itemsInfo];
                 watchedState.processState = 'default';
                 console.log(state)
             })
