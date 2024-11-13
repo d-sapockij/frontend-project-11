@@ -4,6 +4,7 @@ const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const autoprefixer = require('autoprefixer')
 const WorkboxWebpackPlugin = require('workbox-webpack-plugin');
+const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 
 const isProduction = process.env.NODE_ENV == 'production';
 
@@ -19,7 +20,11 @@ const config = {
     },
     plugins: [
         new HtmlWebpackPlugin({
-            template: './index.html',
+          template: './index.html',
+        }),
+        new MiniCssExtractPlugin({
+          filename: 'styles.css',
+          // linkType: "text/css",
         }),
     ],
     module: {
@@ -27,10 +32,14 @@ const config = {
           {
             test: /\.(scss)$/,
             use: [
+              // 
               {
-                // Adds CSS to the DOM by injecting a `<style>` tag
-                loader: 'style-loader'
+                loader: MiniCssExtractPlugin.loader
               },
+              // {
+              //   // Adds CSS to the DOM by injecting a `<style>` tag
+              //   loader: 'style-loader'
+              // },
               {
                 // Interprets `@import` and `url()` like `import/require()` and will resolve them
                 loader: 'css-loader'
