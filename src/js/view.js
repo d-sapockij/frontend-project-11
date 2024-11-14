@@ -173,10 +173,12 @@ export default () => {
                     }
                 });
             })
-            .then(() => axios.get(`https://allorigins.hexlet.app/get?url=${url}`))
-            .catch(() => {
-                throw new Error('network_error');
-                // Настроить axios чтобы если запрос длился больше 10 секунд отдавал ошибку
+            .then(() => {
+                return axios.get(`https://allorigins.hexlet.app/get?url=${url}`)
+                    .catch(() => {
+                        throw new Error('network_error');
+                        // Настроить axios чтобы если запрос длился больше 10 секунд отдавал ошибку
+                    });
             })
             .then((response) => {
                 const parsedFeed = xmlParse(response.data.contents);
