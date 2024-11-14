@@ -69,7 +69,6 @@ export default () => {
         button.textContent = i18next.t('ui.button');
     });
 
-
     const render = (path, value, previousValue) => {
         if (path === 'processState') {
             switch (value) {
@@ -78,6 +77,8 @@ export default () => {
                     feedbackEl.textContent = '';
                     input.value = '';
                     input.focus();
+                    input.readOnly = false;
+                    button.disabled = false;
                     break;
                 case 'sending':
                     // запихать что-то типа блокировки формы на время отправки
@@ -89,15 +90,20 @@ export default () => {
                     // ну и в целолм onChange работает при СМЕНЕ чего-то) так что все логично
 
                     // ну и так-то актуально.. время какое-то проходит пока ответ приходит
+                    input.readOnly = true;
+                    button.disabled = true;
                     break;
                 case 'error':
                     input.classList.add('is-invalid');
                     feedbackEl.textContent = i18next.t(`errors.${state.error}`);
+                    console.log(state)
                     input.focus();
                     input.select();
+                    input.readOnly = false;
+                    button.disabled = false;
                     break;
                 default:
-                    throw new Error(`Unknown process state: ${value}`);
+                    throw new Error(`unknown_process_state`);
             }
         };
 
@@ -138,13 +144,11 @@ export default () => {
 
                 elem.replaceChildren(elemTitle, elemText);
                 
-                console.log('decsdasdsad', description)
-
                 return elem;
             });
             listGroup.replaceChildren(...feedsElems);
         };
-    }
+    };
 
     const watchedState = onChange(state, render);
 
@@ -155,32 +159,36 @@ export default () => {
       });
 
     let schema = string().url().nullable();
-
+    
     form.addEventListener('submit', (event) => {
         event.preventDefault();
         watchedState.processState = 'sending';
         const formData = new FormData(event.target);
         const url = formData.get('url');
-        
         schema.validate(url)
-            .then((url) => {
-                if (state.urls.includes(url)) {
-                    throw new Error('duplicated_url');
-                }
-                const request = axios.get(`https://allorigins.hexlet.app/get?url=${url}`)
-                    .catch(() => {
-                        throw new Error('network_error');
-                    });
-                return request;
+            .then(() => {
+                state.feeds.forEach(({ link }) => {
+                    if (link === url) {
+                        throw new Error('duplicated_url');
+                    }
+                });
+            })
+            .then(() => axios.get(`https://allorigins.hexlet.app/get?url=${url}`))
+            .catch(() => {
+                throw new Error('network_error');
+                // Настроить axios чтобы если запрос длился больше 10 секунд отдавал ошибку
             })
             .then((response) => {
-                // console.log(response.data.contents)
                 const parsedFeed = xmlParse(response.data.contents);
-                
-                console.log(parsedFeed)
-
+                // console.log(parsedFeed)
                 const feedTitle = parsedFeed.querySelector('title').textContent;
                 const feedDescription = parsedFeed.querySelector('description').textContent;
+                const feed = {
+                    title: feedTitle,
+                    description: feedDescription,
+                    link: url,
+                };
+        
                 const items = parsedFeed.querySelectorAll('item');
                 const itemsInfo = Array.from(items).map((item) => {
                     const title = item.querySelector('title').textContent;
@@ -189,10 +197,10 @@ export default () => {
                     return { title, description, link };
                 });
                 // console.log(itemsInfo)
-                watchedState.urls.push(url);
-                watchedState.feeds.push({ title: feedTitle, description: feedDescription });
-                watchedState.posts = [...watchedState.posts, ...itemsInfo];
                 watchedState.processState = 'default';
+                // watchedState.urls.push(url);
+                watchedState.feeds.push(feed);
+                watchedState.posts = [...watchedState.posts, ...itemsInfo];
                 console.log(state)
             })
             .catch((error) => {
