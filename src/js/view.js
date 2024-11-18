@@ -9,13 +9,13 @@ const xmlParse = (str) => {
     const parser = new DOMParser();
     const parsedXml = parser.parseFromString(str, 'application/xml');
     
-    // Для обработки ошибок
-    const errorNode = parsedXml.querySelector("parsererror");
-    if (errorNode) {
-        throw new Error('invalid_xml');
-    } else {
-        return parsedXml;
-    }
+    // // Для обработки ошибок
+    // const errorNode = parsedXml.querySelector("parsererror");
+    // if (errorNode) {
+    //     throw new Error('invalid_xml');
+    // } else {
+    return parsedXml;
+    // }
 };
 
 const createCardElem = () => {
@@ -38,11 +38,17 @@ const createCardElem = () => {
 
 export default () => {
     const state = {
-        processState: 'default',    
-        urls: [],
+        form: {
+            isValid: true,
+            error: '',
+        },
+        loadingProcess: {
+            status: 'idle', // статус который можно никак не обрабатывать, специальный статус который ничего не значит и нужен для начала приложения чтобы что-то было..
+            // loading, success, fail
+            error: '',
+        },
         feeds: [],
         posts: [],
-        error: '',
     };
 
     const h1 = document.querySelector('h1');
@@ -70,9 +76,25 @@ export default () => {
     });
 
     const render = (path, value, previousValue) => {
-        if (path === 'processState') {
+
+        if (path === 'form.isValid') {
+            if (value) {
+                input.classList.remove('is-invalid');
+                feedbackEl.textContent = '';
+            } else {
+                input.classList.add('is-invalid');
+                feedbackEl.textContent = i18next.t(`errors.${state.form.error}`);
+            };
+        };
+
+
+        if (path === 'loadingProcess.status') {
             switch (value) {
-                case 'default':
+                case 'loading':
+                    input.readOnly = true;
+                    button.disabled = true;
+                    break;
+                case 'success':
                     input.classList.remove('is-invalid');
                     feedbackEl.textContent = '';
                     input.value = '';
@@ -80,30 +102,17 @@ export default () => {
                     input.readOnly = false;
                     button.disabled = false;
                     break;
-                case 'sending':
-                    // запихать что-то типа блокировки формы на время отправки
-                    // пока он тут нужен чтобы onChange отрабатывал даже если state меняется на тот же самый 
-                    // error => error например
-                    // без этого кейс с error не отрабатывает каждый раз, только в первый
-                    // хорошо прослеживается на input.select()
-                    // отработает при ошибке только один раз, пока не сменится на другой state
-                    // ну и в целолм onChange работает при СМЕНЕ чего-то) так что все логично
-
-                    // ну и так-то актуально.. время какое-то проходит пока ответ приходит
-                    input.readOnly = true;
-                    button.disabled = true;
-                    break;
-                case 'error':
-                    input.classList.add('is-invalid');
-                    feedbackEl.textContent = i18next.t(`errors.${state.error}`);
-                    console.log(state)
+                case 'fail':
+                    // input.classList.add('is-invalid');
+                    feedbackEl.textContent = i18next.t(`errors.${state.loadingProcess.error}`);
                     input.focus();
                     input.select();
                     input.readOnly = false;
                     button.disabled = false;
                     break;
                 default:
-                    throw new Error(`unknown_process_state`);
+                    throw new Error(`unknown_loading_state`);
+                    // Эта ошибка будто бы теперь не отобразится в UI
             }
         };
 
@@ -162,27 +171,43 @@ export default () => {
     
     form.addEventListener('submit', (event) => {
         event.preventDefault();
-        watchedState.processState = 'sending';
+        // watchedState.processState = 'sending';
         const formData = new FormData(event.target);
         const url = formData.get('url');
         schema.validate(url)
+            .catch((error) => {
+                watchedState.form.error = error.message;
+                watchedState.form.isValid = false;
+                throw error;
+            })
             .then(() => {
                 state.feeds.forEach(({ link }) => {
                     if (link === url) {
+                        watchedState.form.isValid = false;
+                        watchedState.form.error = 'duplicated_url';
                         throw new Error('duplicated_url');
-                    }
+                    };
                 });
             })
             .then(() => {
+                watchedState.form.isValid = true;
+                watchedState.loadingProcess.status = 'loading';
                 return axios.get(`https://allorigins.hexlet.app/get?url=${url}`)
                     .catch(() => {
+                        watchedState.loadingProcess.error = 'network_error';
+                        watchedState.loadingProcess.status = 'fail';
                         throw new Error('network_error');
                         // Настроить axios чтобы если запрос длился больше 10 секунд отдавал ошибку
                     });
             })
             .then((response) => {
                 const parsedFeed = xmlParse(response.data.contents);
-                // console.log(parsedFeed)
+                const errorNode = parsedFeed.querySelector("parsererror");
+                if (errorNode) {
+                    watchedState.loadingProcess.error = 'invalid_xml';
+                    watchedState.loadingProcess.status = 'fail';
+                    throw new Error('invalid_xml');
+                };
                 const feedTitle = parsedFeed.querySelector('title').textContent;
                 const feedDescription = parsedFeed.querySelector('description').textContent;
                 const feed = {
@@ -199,18 +224,11 @@ export default () => {
                     return { title, description, link };
                 });
                 // console.log(itemsInfo)
-                watchedState.processState = 'default';
-                // watchedState.urls.push(url);
+                // watchedState.processState = 'default';
+                watchedState.loadingProcess.status = 'success';
                 watchedState.feeds.push(feed);
                 watchedState.posts = [...watchedState.posts, ...itemsInfo];
                 console.log(state)
-            })
-            .catch((error) => {
-                watchedState.error = error.message;
-                watchedState.processState = 'error';
-                // console.error(error)
-                // console.log(state.error)
-                throw error;
             });
     });
 };
