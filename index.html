@@ -14,13 +14,14 @@
         <form class="form" id="form">
             <div class="row mb-3">
                 <div class="col">
-                    <input type="text" class="col form-control" name="url" required placeholder="RSS" aria-label="RSS"
+                    <input type="text" id="url-input" class="col form-control" name="url" required placeholder="RSS" aria-label="RSS"
                         aria-describedby="basic-addon">
                 </div>
                 <div class="col">
-                    <button type="submit" name="button" class=" col btn btn-primary">Add RSS</button>
+                    <button type="submit" id="button" class="col btn btn-primary" name="button" >Добавить TSS</button>
                 </div>
             </div>
+        </form>
             <p class="feedback m-0 small text-danger" id="feedback"></p>
             <p class="mt-2 mb-0 text-muted">Пример: https://lorem-rss.hexlet.app/feed</p>
             <section class="container-fluid container-xxl p-5">
@@ -29,7 +30,6 @@
                     <div class="col-md-10 col-lg-4 mx-auto order-0 order-lg-1 feeds" id="feeds"></div>
                 </div>
             </section>
-        </form>
     </div>
 </body>
 
