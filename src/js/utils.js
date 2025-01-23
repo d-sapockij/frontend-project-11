@@ -12,7 +12,7 @@ export const xmlParse = (str) => {
   }
 };
 
-export const validateUrl = (url, state) => {
+export const validateUrl = (url, urlsList) => {
   setLocale({
     string: {
       url: 'invalid_url',
@@ -23,8 +23,8 @@ export const validateUrl = (url, state) => {
   // Проверка на корректность url и на наличие дублей в стейте
   return schema.validate(url)
     .then(() => {
-      state.feeds.forEach(({ link }) => {
-        if (link === url) {
+      urlsList.forEach((item) => {
+        if (item === url) {
           throw new Error('duplicated_url');
         };
       });

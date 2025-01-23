@@ -3,9 +3,42 @@
 import onChange from 'on-change';
 import i18next from 'i18next';
 import axios from 'axios';
+import { uniqueId } from 'lodash';
 import ru from './locales/ru.js';
 import render from './view.js';
 import { xmlParse, validateUrl } from './utils.js';
+
+const updatePosts = (state) => {
+  console.log(state)
+  setTimeout(() => {
+    state.feeds.forEach((feed) => {
+      axios.get(`https://allorigins.hexlet.app/get?url=${feed.link}`)
+        .then((response) => {
+          const oldPostsLinks = state.posts
+            .filter((post) => post.feedId === feed.id)
+            .map(({ link }) => link);
+
+          const parsedFeed = xmlParse(response.data.contents);
+          const items = parsedFeed.querySelectorAll('item');          
+          const newPosts = Array.from(items)
+            .map((item) => {
+              const title = item.querySelector('title').textContent;
+              const description = item.querySelector('description').textContent;
+              const link = item.querySelector('link').textContent;
+              return { title, description, link };
+            })
+            .filter(({ link }) => !oldPostsLinks.includes(link))
+            .map((item) => ({ 
+              id: uniqueId(), 
+              feedId: feed.id,
+              ...item 
+            }));
+            state.posts = [...state.posts, ...newPosts];
+        })
+      });
+    updatePosts(state);
+  }, 5000);
+};
 
 export default () => {
   const initialState = {
@@ -58,15 +91,7 @@ export default () => {
 
   const watchedState = onChange(initialState, render(elements, initialState));
 
-  // const loop = () => {
-  //   setTimeout(() => {
-  //     // Your logic here
   
-  //     loop();
-  //   }, delay);
-  // };
-  
-  console.log(form)
 
   elements.form.addEventListener('submit', (event) => {
     event.preventDefault();
@@ -82,7 +107,8 @@ export default () => {
 
     const formData = new FormData(event.target);
     const url = formData.get('url');
-    validateUrl(url, watchedState)
+    const currentUrls = watchedState.feeds.map(({ link }) => link)
+    validateUrl(url, currentUrls)
       .then(() => {
         watchedState.form.isValid = true;
         watchedState.form.error = '';
@@ -103,7 +129,9 @@ export default () => {
 
         const feedTitle = parsedFeed.querySelector('title').textContent;
         const feedDescription = parsedFeed.querySelector('description').textContent;
+        const feedId = uniqueId();
         const feed = {
+          id: feedId,
           title: feedTitle,
           description: feedDescription,
           link: url,
@@ -115,13 +143,20 @@ export default () => {
             const title = item.querySelector('title').textContent;
             const description = item.querySelector('description').textContent;
             const link = item.querySelector('link').textContent;
-            return { title, description, link };
+            return { 
+              id: uniqueId(),
+              feedId: feedId,
+              title,
+              description,
+              link,
+            };
           });
         watchedState.loadingProcess.status = 'success';
         watchedState.feeds.push(feed);
         // Почему именно так добавляю посты? Не через пуш или еще как
         watchedState.posts = [...watchedState.posts, ...itemsInfo];
         console.log(watchedState)
+        updatePosts(watchedState);
       })
       .catch((error) => {
         console.log(error)
