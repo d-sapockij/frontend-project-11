@@ -4,6 +4,7 @@ import onChange from 'on-change';
 import i18next from 'i18next';
 import axios from 'axios';
 import { uniqueId } from 'lodash';
+import 'bootstrap';
 import ru from './locales/ru.js';
 import render from './view.js';
 import { xmlParse, validateUrl } from './utils.js';
@@ -31,6 +32,7 @@ const updatePosts = (state) => {
             .map((item) => ({ 
               id: uniqueId(), 
               feedId: feed.id,
+              seen: false,
               ...item 
             }));
             state.posts = [...state.posts, ...newPosts];
@@ -89,7 +91,21 @@ export default () => {
     elements.fields.button.textContent = i18next.t('ui.button');
   });
 
-  const watchedState = onChange(initialState, render(elements, initialState));
+  const watchedState = onChange(initialState, (path, value, previousValue) => {
+    render(elements, initialState)(path, value, previousValue);
+    const postsElems = elements.postsContainer.querySelectorAll('li');
+        postsElems.forEach((item) => item.addEventListener('click', (event) => {
+          console.log(event.target)
+          const button = item.querySelector('button');
+          const postId = button.dataset.id; 
+          watchedState.posts.forEach((item) => {
+            if (item.id === postId) {
+              item.seen = true;
+            }
+          })
+        }))
+        // Хочется возвращаться из рендера сразу узлы постов мб чтобы не утыкаться в этот QuerySelector блин 
+  });
 
   
 
@@ -146,6 +162,7 @@ export default () => {
             return { 
               id: uniqueId(),
               feedId: feedId,
+              seen: false,
               title,
               description,
               link,
@@ -153,10 +170,10 @@ export default () => {
           });
         watchedState.loadingProcess.status = 'success';
         watchedState.feeds.push(feed);
-        // Почему именно так добавляю посты? Не через пуш или еще как
         watchedState.posts = [...watchedState.posts, ...itemsInfo];
-        console.log(watchedState)
+
         updatePosts(watchedState);
+        
       })
       .catch((error) => {
         console.log(error)
@@ -179,4 +196,5 @@ export default () => {
 
     // вынести коды ошибок в константы
   });
+
 };

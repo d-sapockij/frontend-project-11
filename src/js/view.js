@@ -61,32 +61,56 @@ const createCardElem = () => {
   return { card, cardTitle, listGroup };
 };
 
-const renderPosts = (elements, initialState) => {
+const renderPosts = (elements, posts) => {
   elements.postsContainer.innerHTML = '';
       const { card, cardTitle, listGroup } = createCardElem();
       elements.postsContainer.appendChild(card);
       cardTitle.innerText = i18next.t('ui.posts.title');
-      const postsElems = initialState.posts.map(({ title, description, link }) => {
+      const postsElems = posts.map(({ id, seen, title, description, link }) => {
         const elem = document.createElement('li');
         elem.classList.add('list-group-item', 'd-flex', 'justify-content-between', 'align-items-start', 'border-0', 'border-end-0');
         const linkElem = document.createElement('a');
         linkElem.href = link;
-        linkElem.classList.add('fw-bold');
+        if (seen) {
+          linkElem.classList.add('fw-normal', 'link-secondary');
+        } else {
+          linkElem.classList.add('fw-bold');
+        }
         linkElem.target = '_blank';
         linkElem.rel = 'noopener noreferrer';
         linkElem.textContent = title;
-        elem.appendChild(linkElem);
+        linkElem.dataset.id = id;
+
+        
+
+        const button = document.createElement('button');
+        button.classList.add('btn', 'btn-outline-primary');
+        button.dataset.bsToggle = 'modal';
+        button.dataset.bsTarget = '#modal';
+        button.dataset.id = id;
+        button.textContent = i18next.t('ui.posts.button');
+
+        
+        // Я НЕ ПОНИМАЮ.. Нельзя же изменять состояние изнутри рендера :///
+        // А в уроке Отрисовка (рендеринг) состояния говорится что:
+        // Рендеринг пользуется состоянием для отрисовки (добавление, изменение или удаление элементов) и добавляет новые обработчики в DOM
+
+        // linkElem.addEventListener('click', (event) => {
+        //   event.preventDefault();
+        //   console.log(event.target);
+        // })
+        elem.append(linkElem, button);
         return elem;
       });
       listGroup.replaceChildren(...postsElems);
 };
 
-const renderFeeds = (elements, initialState) => {
+const renderFeeds = (elements, feeds) => {
   elements.feedsContainer.innerHTML = '';
       const { card, cardTitle, listGroup } = createCardElem();
       elements.feedsContainer.appendChild(card);
       cardTitle.innerText = i18next.t('ui.feeds.title');
-      const feedsElems = initialState.feeds.map(({ title, description }) => {
+      const feedsElems = feeds.map(({ title, description }) => {
         const elem = document.createElement('li');
         elem.classList.add('list-group-item', 'border-0', 'border-end-0');
         const elemTitle = document.createElement('h3');
@@ -132,10 +156,10 @@ export default (elements, initialState) => (path, value, previousValue) => {
     };
 
     if (path === 'posts') {
-      renderPosts(elements, initialState);
+      renderPosts(elements, initialState.posts, initialState);
     };
 
     if (path === 'feeds') {
-      renderFeeds(elements, initialState);
+      renderFeeds(elements, initialState.feeds);
     };
   };
