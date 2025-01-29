@@ -17,7 +17,11 @@ export default {
         },
         feeds: {
           title: 'Фиды',
-        }
+        },
+        modal: {
+          submitButton: 'Читать полностью',
+          closeButton: 'Закрыть',
+        },
       },
       errors: {
         duplicated_url: 'RSS уже существует',

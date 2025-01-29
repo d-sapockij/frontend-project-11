@@ -156,10 +156,14 @@ export default (elements, initialState) => (path, value, previousValue) => {
     };
 
     if (path === 'posts') {
-      renderPosts(elements, initialState.posts, initialState);
+      renderPosts(elements, initialState.posts);
     };
 
     if (path === 'feeds') {
       renderFeeds(elements, initialState.feeds);
     };
+
+    if (path === 'activeModal') {
+      console.log('работает')
+    }
   };

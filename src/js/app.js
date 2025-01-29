@@ -9,9 +9,9 @@ import ru from './locales/ru.js';
 import render from './view.js';
 import { xmlParse, validateUrl } from './utils.js';
 
-const updatePosts = (state) => {
-  console.log(state)
+const updatePosts = (state, elements) => {
   setTimeout(() => {
+    console.log(state)
     state.feeds.forEach((feed) => {
       axios.get(`https://allorigins.hexlet.app/get?url=${feed.link}`)
         .then((response) => {
@@ -38,7 +38,7 @@ const updatePosts = (state) => {
             state.posts = [...state.posts, ...newPosts];
         })
       });
-    updatePosts(state);
+    updatePosts(state, elements);
   }, 5000);
 };
 
@@ -62,6 +62,7 @@ export default () => {
     },
     feeds: [],
     posts: [],
+    activeModal: '',
   };
 
   const elements = {
@@ -75,6 +76,13 @@ export default () => {
     feedbackEl: document.querySelector('#feedback'),
     postsContainer: document.querySelector('#posts'),
     feedsContainer: document.querySelector('#feeds'),
+    modal: document.querySelector('#modal'),
+    modalItems: {
+      title: document.querySelector('#modal-title'),
+      body: document.querySelector('.modal-body'),
+      submitButton: document.querySelector('#modal-button'),
+      closeButton: document.querySelector('#modal-close-button'),
+    }
   };
 
   // тут инстанс добавить 
@@ -89,24 +97,11 @@ export default () => {
     elements.subtitle.textContent = i18next.t('ui.subtitle');
     elements.fields.input.placeholder = i18next.t('ui.placeholder');
     elements.fields.button.textContent = i18next.t('ui.button');
+    elements.modalItems.submitButton.textContent = i18next.t('ui.modal.submitButton');
+    elements.modalItems.closeButton.textContent = i18next.t('ui.modal.closeButton');
   });
 
-  const watchedState = onChange(initialState, (path, value, previousValue) => {
-    render(elements, initialState)(path, value, previousValue);
-    const postsElems = elements.postsContainer.querySelectorAll('li');
-        postsElems.forEach((item) => item.addEventListener('click', (event) => {
-          console.log(event.target)
-          const button = item.querySelector('button');
-          const postId = button.dataset.id; 
-          watchedState.posts.forEach((item) => {
-            if (item.id === postId) {
-              item.seen = true;
-            }
-          })
-        }))
-        // Хочется возвращаться из рендера сразу узлы постов мб чтобы не утыкаться в этот QuerySelector блин 
-  });
-
+  const watchedState = onChange(initialState, render(elements, initialState));
   
 
   elements.form.addEventListener('submit', (event) => {
@@ -171,9 +166,8 @@ export default () => {
         watchedState.loadingProcess.status = 'success';
         watchedState.feeds.push(feed);
         watchedState.posts = [...watchedState.posts, ...itemsInfo];
-
-        updatePosts(watchedState);
         
+        updatePosts(watchedState, elements);
       })
       .catch((error) => {
         console.log(error)
@@ -197,4 +191,22 @@ export default () => {
     // вынести коды ошибок в константы
   });
 
+  elements.postsContainer.addEventListener('click', (event) => {
+    const id = event.target.dataset.id;
+    if (id) {
+      watchedState.posts.forEach((item) => {
+        if (item.id === id) {
+          item.seen = true;
+        }
+      });
+    };
+
+    if (id && event.target.tagName === 'BUTTON') {
+      watchedState.posts.forEach((item) => {
+        if (item.id === id) {
+          watchedState.activeModal = id;
+        }
+      });
+    }
+  });
 };
