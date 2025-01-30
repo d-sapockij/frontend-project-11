@@ -66,7 +66,7 @@ const renderPosts = (elements, posts) => {
       const { card, cardTitle, listGroup } = createCardElem();
       elements.postsContainer.appendChild(card);
       cardTitle.innerText = i18next.t('ui.posts.title');
-      const postsElems = posts.map(({ id, seen, title, description, link }) => {
+      const postsElems = posts.map(({ id, seen, title, link }) => {
         const elem = document.createElement('li');
         elem.classList.add('list-group-item', 'd-flex', 'justify-content-between', 'align-items-start', 'border-0', 'border-end-0');
         const linkElem = document.createElement('a');
@@ -164,6 +164,12 @@ export default (elements, initialState) => (path, value, previousValue) => {
     };
 
     if (path === 'activeModal') {
-      console.log('работает')
+      initialState.posts.forEach((post) => {
+        if (post.id === value) {
+          elements.modalItems.title.textContent = post.title;
+          elements.modalItems.body.textContent = post.description;
+          elements.modalItems.submitButton.href = post.link;
+        }
+      });
     }
   };

@@ -62,7 +62,6 @@ export default () => {
     },
     feeds: [],
     posts: [],
-    activeModal: '',
   };
 
   const elements = {
