@@ -17,6 +17,9 @@ const config = {
     devServer: {
         open: true,
         host: 'localhost',
+        client: {
+          overlay: false,
+        },
     },
     plugins: [
         new HtmlWebpackPlugin({
@@ -68,7 +71,6 @@ const config = {
 module.exports = () => {
     if (isProduction) {
         config.mode = 'production';
-        
         
         config.plugins.push(new WorkboxWebpackPlugin.GenerateSW());
         
