@@ -126,7 +126,7 @@ export default () => {
         watchedState.loadingProcess.status = 'loading';
         watchedState.loadingProcess.error = '';
 
-        return axios.get(`https://allorigins.hexlet.app/get?url=${url}`)
+        return axios.get(`https://allorigins.hexlet.app/get?disableCache=true?url=${url}`)
       })
       .then((response) => {
         watchedState.loadingProcess.status = 'success';
@@ -140,7 +140,7 @@ export default () => {
         const feedTitle = parsedFeed.querySelector('title').textContent;
         const feedDescription = parsedFeed.querySelector('description').textContent;
         const feedId = uniqueId();
-        const feed = {
+        const feed = { 
           id: feedId,
           title: feedTitle,
           description: feedDescription,
