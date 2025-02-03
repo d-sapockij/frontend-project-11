@@ -125,8 +125,8 @@ export default () => {
 
         watchedState.loadingProcess.status = 'loading';
         watchedState.loadingProcess.error = '';
-
-        return axios.get(`https://allorigins.hexlet.app/get?disableCache=true?url=${url}`)
+        console.log(url)
+        return axios.get(`https://allorigins.hexlet.app/get?disableCache=true&url=${url}`)
       })
       .then((response) => {
         watchedState.loadingProcess.status = 'success';
