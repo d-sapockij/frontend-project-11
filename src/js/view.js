@@ -28,6 +28,10 @@ const handleParsingState = (value, elements) => {
     case 'success':
       elements.fields.input.classList.remove('is-invalid');
       elements.fields.input.value = '';
+
+      elements.feedbackEl.textContent = i18next.t('success');
+      elements.feedbackEl.classList.remove('text-danger');
+      elements.feedbackEl.classList.add('text-success');
       break;
     case 'fail':
       elements.fields.input.classList.add('is-invalid');
@@ -153,6 +157,9 @@ export default (elements, initialState) => (path, value, previousValue) => {
 
     if (path === 'form.error' || path === 'loadingProcess.error' || path === 'parsingProcess.error') {
       elements.feedbackEl.textContent = value ? i18next.t(`errors.${value}`) : value;
+      
+      elements.feedbackEl.classList.add('text-danger');
+      elements.feedbackEl.classList.remove('text-success');
     };
 
     if (path === 'posts') {
