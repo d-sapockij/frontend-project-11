@@ -20,7 +20,7 @@ const updatePosts = (state, elements) => {
             .map(({ link }) => link);
 
           const parsedFeed = xmlParse(response.data.contents);
-          const items = parsedFeed.querySelectorAll('item');     
+          const items = parsedFeed.querySelectorAll('item');
           const newPosts = Array.from(items)
             .map((item) => {
               const title = item.querySelector('title').textContent;

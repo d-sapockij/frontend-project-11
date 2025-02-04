@@ -96,7 +96,7 @@ const renderPosts = (elements, posts) => {
 
     // Я НЕ ПОНИМАЮ.. Нельзя же изменять состояние изнутри рендера :///
     // А в уроке Отрисовка (рендеринг) состояния говорится что:
-    // Рендеринг пользуется состоянием для отрисовки 
+    // Рендеринг пользуется состоянием для отрисовки
     // (добавление, изменение или удаление элементов) и добавляет новые обработчики в DOM
 
     // linkElem.addEventListener('click', (event) => {
@@ -131,7 +131,7 @@ const renderFeeds = (elements, feeds) => {
   listGroup.replaceChildren(...feedsElems);
 };
 
-export default (elements, initialState) => (path, value, previousValue) => {
+export default (elements, initialState) => (path, value) => {
 // Я чувствую, что стоит пересмотреть логику рендера,
 // и разделить вывод ошибок и обработку стилей формы и тд
 // не хочу (и не получается) обращаться к стейту,
@@ -147,7 +147,8 @@ export default (elements, initialState) => (path, value, previousValue) => {
     }
   }
 
-  // Думаю нужно плотно переписывать логику рендера и обработки ошибок в принципе, хотя с этим уже лучше чем с рендером
+  // Думаю нужно плотно переписывать логику рендера
+  // и обработки ошибок в принципе, хотя с этим уже лучше чем с рендером
 
   if (path === 'loadingProcess.status') {
     handleProcessState(value, elements);
