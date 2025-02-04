@@ -20,7 +20,7 @@ const updatePosts = (state, elements) => {
             .map(({ link }) => link);
 
           const parsedFeed = xmlParse(response.data.contents);
-          const items = parsedFeed.querySelectorAll('item');          
+          const items = parsedFeed.querySelectorAll('item');     
           const newPosts = Array.from(items)
             .map((item) => {
               const title = item.querySelector('title').textContent;
@@ -29,15 +29,15 @@ const updatePosts = (state, elements) => {
               return { title, description, link };
             })
             .filter(({ link }) => !oldPostsLinks.includes(link))
-            .map((item) => ({ 
-              id: uniqueId(), 
+            .map((item) => ({
+              id: uniqueId(),
               feedId: feed.id,
               seen: false,
-              ...item 
+              ...item,
             }));
-            state.posts = [...state.posts, ...newPosts];
-        })
-      });
+          state.posts = [...state.posts, ...newPosts];
+        });
+    });
     updatePosts(state, elements);
   }, 5000);
 };
@@ -49,8 +49,9 @@ export default () => {
       error: '',
     },
     loadingProcess: {
-      status: 'idle', 
-      // idle - статус который можно никак не обрабатывать, специальный статус который ничего не значит и нужен для начала приложения чтобы что-то было..
+      status: 'idle',
+      // idle - статус который можно никак не обрабатывать,
+      // специальный статус который ничего не значит и нужен для начала приложения чтобы что-то было..
       // loading, success, fail
       error: '',
     },
@@ -81,16 +82,16 @@ export default () => {
       body: document.querySelector('.modal-body'),
       submitButton: document.querySelector('#modal-button'),
       closeButton: document.querySelector('#modal-close-button'),
-    }
+    },
   };
 
-  // тут инстанс добавить 
+  // тут инстанс добавить
   i18next.init({
     lng: 'ru',
     debug: true,
     resources: {
       ru,
-    }
+    },
   }).then(() => {
     elements.h1.textContent = i18next.t('ui.header');
     elements.subtitle.textContent = i18next.t('ui.subtitle');
@@ -101,7 +102,6 @@ export default () => {
   });
 
   const watchedState = onChange(initialState, render(elements, initialState));
-  
 
   elements.form.addEventListener('submit', (event) => {
     event.preventDefault();
@@ -117,7 +117,7 @@ export default () => {
 
     const formData = new FormData(event.target);
     const url = formData.get('url');
-    const currentUrls = watchedState.feeds.map(({ link }) => link)
+    const currentUrls = watchedState.feeds.map(({ link }) => link);
     validateUrl(url, currentUrls)
       .then(() => {
         watchedState.form.isValid = true;
@@ -125,8 +125,7 @@ export default () => {
 
         watchedState.loadingProcess.status = 'loading';
         watchedState.loadingProcess.error = '';
-        console.log(url)
-        return axios.get(`https://allorigins.hexlet.app/get?disableCache=true&url=${url}`)
+        return axios.get(`https://allorigins.hexlet.app/get?disableCache=true&url=${url}`);
       })
       .then((response) => {
         watchedState.loadingProcess.status = 'success';
@@ -140,7 +139,7 @@ export default () => {
         const feedTitle = parsedFeed.querySelector('title').textContent;
         const feedDescription = parsedFeed.querySelector('description').textContent;
         const feedId = uniqueId();
-        const feed = { 
+        const feed = {
           id: feedId,
           title: feedTitle,
           description: feedDescription,
@@ -153,9 +152,9 @@ export default () => {
             const title = item.querySelector('title').textContent;
             const description = item.querySelector('description').textContent;
             const link = item.querySelector('link').textContent;
-            return { 
+            return {
               id: uniqueId(),
-              feedId: feedId,
+              feedId,
               seen: false,
               title,
               description,
@@ -165,12 +164,11 @@ export default () => {
         watchedState.loadingProcess.status = 'success';
         watchedState.feeds.push(feed);
         watchedState.posts = [...watchedState.posts, ...itemsInfo];
-        
+
         updatePosts(watchedState, elements);
       })
       .catch((error) => {
-        console.log(error)
-        console.log(initialState)
+        console.log(error);
         if (axios.isAxiosError(error)) {
           watchedState.loadingProcess.error = 'network_error';
           watchedState.loadingProcess.status = 'fail';
@@ -184,24 +182,23 @@ export default () => {
         }
         // попробую вынести это в общий блок для общей обработки в view
         // watchedState.form.isValid = false;
-
       });
 
     // вынести коды ошибок в константы
   });
 
   elements.postsContainer.addEventListener('click', (event) => {
-    const id = event.target.dataset.id;
-      watchedState.posts.forEach((item) => {
-        if (item.id === event.target.dataset.id) {
-          item.seen = true;
-        }
-      });
+    const currentId = event.target.dataset.id;
+    watchedState.posts.forEach((item, index) => {
+      if (item.id === currentId) {
+        watchedState.posts[index].seen = true;
+      }
+    });
 
-    if (id && event.target.tagName === 'BUTTON') {
+    if (currentId && event.target.tagName === 'BUTTON') {
       watchedState.posts.forEach((item) => {
-        if (item.id === id) {
-          watchedState.activeModal = id;
+        if (item.id === currentId) {
+          watchedState.activeModal = currentId;
         }
       });
     }
