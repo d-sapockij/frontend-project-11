@@ -2,7 +2,9 @@ import i18next from 'i18next';
 
 const handleProcessState = (value, elements) => {
   const isLoading = value === 'loading';
+  // eslint-disable-next-line
   elements.fields.input.readOnly = isLoading;
+  // eslint-disable-next-line
   elements.fields.button.disabled = isLoading;
 
   switch (value) {
@@ -27,8 +29,9 @@ const handleParsingState = (value, elements) => {
   switch (value) {
     case 'success':
       elements.fields.input.classList.remove('is-invalid');
+      // eslint-disable-next-line
       elements.fields.input.value = '';
-
+      // eslint-disable-next-line
       elements.feedbackEl.textContent = i18next.t('success');
       elements.feedbackEl.classList.remove('text-danger');
       elements.feedbackEl.classList.add('text-success');
@@ -66,6 +69,7 @@ const createCardElem = () => {
 };
 
 const renderPosts = (elements, posts) => {
+  // eslint-disable-next-line
   elements.postsContainer.innerHTML = '';
   const { card, cardTitle, listGroup } = createCardElem();
   elements.postsContainer.appendChild(card);
@@ -110,6 +114,7 @@ const renderPosts = (elements, posts) => {
 };
 
 const renderFeeds = (elements, feeds) => {
+  // eslint-disable-next-line
   elements.feedsContainer.innerHTML = '';
   const { card, cardTitle, listGroup } = createCardElem();
   elements.feedsContainer.appendChild(card);
@@ -159,6 +164,7 @@ export default (elements, initialState) => (path, value) => {
   }
 
   if (path === 'form.error' || path === 'loadingProcess.error' || path === 'parsingProcess.error') {
+    // eslint-disable-next-line
     elements.feedbackEl.textContent = value ? i18next.t(`errors.${value}`) : value;
 
     elements.feedbackEl.classList.add('text-danger');
@@ -176,8 +182,11 @@ export default (elements, initialState) => (path, value) => {
   if (path === 'activeModal') {
     initialState.posts.forEach((post) => {
       if (post.id === value) {
+        // eslint-disable-next-line
         elements.modalItems.title.textContent = post.title;
+        // eslint-disable-next-line
         elements.modalItems.body.textContent = post.description;
+        // eslint-disable-next-line
         elements.modalItems.submitButton.href = post.link;
       }
     });

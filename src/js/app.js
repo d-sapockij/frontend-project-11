@@ -35,6 +35,7 @@ const updatePosts = (state, elements) => {
               seen: false,
               ...item,
             }));
+            // eslint-disable-next-line
           state.posts = [...state.posts, ...newPosts];
         });
     });
@@ -51,7 +52,8 @@ export default () => {
     loadingProcess: {
       status: 'idle',
       // idle - статус который можно никак не обрабатывать,
-      // специальный статус который ничего не значит и нужен для начала приложения чтобы что-то было..
+      // специальный статус который ничего не значит
+      // и нужен для начала приложения чтобы что-то было..
       // loading, success, fail
       error: '',
     },
