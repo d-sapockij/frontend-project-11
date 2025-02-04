@@ -11,7 +11,7 @@ import { xmlParse, validateUrl } from './utils.js';
 
 const updatePosts = (state, elements) => {
   setTimeout(() => {
-    console.log(state)
+    console.log(state);
     state.feeds.forEach((feed) => {
       axios.get(`https://allorigins.hexlet.app/get?url=${feed.link}`)
         .then((response) => {
@@ -192,13 +192,11 @@ export default () => {
 
   elements.postsContainer.addEventListener('click', (event) => {
     const id = event.target.dataset.id;
-    if (id) {
       watchedState.posts.forEach((item) => {
-        if (item.id === id) {
+        if (item.id === event.target.dataset.id) {
           item.seen = true;
         }
       });
-    };
 
     if (id && event.target.tagName === 'BUTTON') {
       watchedState.posts.forEach((item) => {
