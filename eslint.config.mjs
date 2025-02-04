@@ -39,7 +39,7 @@ export default [
       'no-underscore-dangle': [
         'error',
         {
-          allow: ['__filename', '__dirname', 'document', 'DOMParser'],
+          allow: ['__filename', '__dirname'],
         },
       ],
       'import/extensions': [
