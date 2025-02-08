@@ -6,6 +6,12 @@ export const xmlParse = (xml, url, feedId = null) => {
   const parser = new DOMParser();
   const parsedXml = parser.parseFromString(xml, 'application/xml');
 
+  const errorNode = parsedXml.querySelector('parsererror');
+  // Для обработки ошибок
+  if (errorNode) {
+    throw new Error('invalid_xml');
+  } 
+
   const feed = {};
 
   if (!feedId) {
@@ -30,13 +36,7 @@ export const xmlParse = (xml, url, feedId = null) => {
         link,
       };
     });
-  // Для обработки ошибок
-  const errorNode = parsedXml.querySelector('parsererror');
-  if (errorNode) {
-    throw new Error('invalid_xml');
-  } else {
-    return { feed, posts };
-  }
+  return { feed, posts };
 };
 
 export const validateUrl = (url, urlsList) => {
