@@ -1,14 +1,41 @@
 import { string, setLocale } from 'yup';
+import { uniqueId } from 'lodash';
 
-export const xmlParse = (str) => {
+export const xmlParse = (xml, url, feedId = null) => {
+// export const xmlParse = (xml, url) => {
   const parser = new DOMParser();
-  const parsedXml = parser.parseFromString(str, 'application/xml');
+  const parsedXml = parser.parseFromString(xml, 'application/xml');
+
+  const feed = {};
+
+  if (!feedId) {
+    feed.id = uniqueId();
+    feed.title = parsedXml.querySelector('title').textContent;
+    feed.description = parsedXml.querySelector('description').textContent;
+    feed.link = url;
+  }
+
+  const items = parsedXml.querySelectorAll('item');
+  const posts = Array.from(items)
+    .map((item) => {
+      const title = item.querySelector('title').textContent;
+      const description = item.querySelector('description').textContent;
+      const link = item.querySelector('link').textContent;
+      return {
+        id: uniqueId(),
+        feedId: feedId || feed.id,
+        seen: false,
+        title,
+        description,
+        link,
+      };
+    });
   // Для обработки ошибок
   const errorNode = parsedXml.querySelector('parsererror');
   if (errorNode) {
     throw new Error('invalid_xml');
   } else {
-    return parsedXml;
+    return { feed, posts };
   }
 };
 

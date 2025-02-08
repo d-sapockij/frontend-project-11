@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "[![Actions Status](https://github.com/d-sapockij/frontend-project-11/actions/workflows/hexlet-check.yml/badge.svg)](https://github.com/d-sapockij/frontend-project-11/actions)",
   "main": "./src/js/index.js",
+  "type": "module",
   "scripts": {
     "build": "webpack --mode=production --node-env=production",
     "build:dev": "webpack --mode=development",

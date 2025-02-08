@@ -3,43 +3,28 @@
 import onChange from 'on-change';
 import i18next from 'i18next';
 import axios from 'axios';
-import { uniqueId } from 'lodash';
 import 'bootstrap';
 import ru from './locales/ru.js';
 import render from './view.js';
 import { xmlParse, validateUrl } from './utils.js';
 
 const updatePosts = (state, elements) => {
+  console.log(state);
   setTimeout(() => {
-    console.log(state);
-    state.feeds.forEach((feed) => {
-      axios.get(`https://allorigins.hexlet.app/get?url=${feed.link}`)
-        .then((response) => {
-          const oldPostsLinks = state.posts
-            .filter((post) => post.feedId === feed.id)
-            .map(({ link }) => link);
+    console.log('updating');
+    const promises = state.feeds.map((feed) => axios.get(`https://allorigins.hexlet.app/get?disableCache=true&url=${feed.link}`)
+      .then((response) => {
+        const oldPostsLinks = state.posts
+          .filter((post) => post.feedId === feed.id)
+          .map(({ link }) => link);
 
-          const parsedFeed = xmlParse(response.data.contents);
-          const items = parsedFeed.querySelectorAll('item');
-          const newPosts = Array.from(items)
-            .map((item) => {
-              const title = item.querySelector('title').textContent;
-              const description = item.querySelector('description').textContent;
-              const link = item.querySelector('link').textContent;
-              return { title, description, link };
-            })
-            .filter(({ link }) => !oldPostsLinks.includes(link))
-            .map((item) => ({
-              id: uniqueId(),
-              feedId: feed.id,
-              seen: false,
-              ...item,
-            }));
-            // eslint-disable-next-line
-          state.posts = [...state.posts, ...newPosts];
-        });
-    });
-    updatePosts(state, elements);
+        const { posts } = xmlParse(response.data.contents, feed.link, feed.id);
+        const newPosts = posts.filter(({ link }) => !oldPostsLinks.includes(link));
+        state.posts.push(...newPosts);
+      }));
+    const promise = Promise.all(promises);
+    promise.then(() => updatePosts(state, elements));
+    // updatePosts(state, elements);
   }, 5000);
 };
 
@@ -110,12 +95,12 @@ export default () => {
     // Сделал чтобы задоджить ситуацию описанную в ТГ
     // Поискать в избранном по подстроке:
     // крч проблема, когда не зануляется в стэйте состояние парсинга
-    watchedState.form.isValid = true;
-    watchedState.form.error = '';
-    watchedState.loadingProcess.status = 'idle';
-    watchedState.loadingProcess.error = '';
-    watchedState.parsingProcess.status = 'idle';
-    watchedState.parsingProcess.error = '';
+    // watchedState.form.isValid = true;
+    // watchedState.form.error = '';
+    // watchedState.loadingProcess.status = 'idle';
+    // watchedState.loadingProcess.error = '';
+    // watchedState.parsingProcess.status = 'idle';
+    // watchedState.parsingProcess.error = '';
 
     const formData = new FormData(event.target);
     const url = formData.get('url');
@@ -127,45 +112,24 @@ export default () => {
 
         watchedState.loadingProcess.status = 'loading';
         watchedState.loadingProcess.error = '';
+
+        watchedState.parsingProcess.status = 'idle';
+        watchedState.parsingProcess.error = '';
+
         return axios.get(`https://allorigins.hexlet.app/get?disableCache=true&url=${url}`);
       })
       .then((response) => {
         watchedState.loadingProcess.status = 'success';
         watchedState.loadingProcess.error = '';
 
-        const parsedFeed = xmlParse(response.data.contents);
+        const { feed, posts } = xmlParse(response.data.contents, url);
         // Ошибки можно обработать внутри внутри xmlParse
         watchedState.parsingProcess.status = 'success';
         watchedState.parsingProcess.error = '';
 
-        const feedTitle = parsedFeed.querySelector('title').textContent;
-        const feedDescription = parsedFeed.querySelector('description').textContent;
-        const feedId = uniqueId();
-        const feed = {
-          id: feedId,
-          title: feedTitle,
-          description: feedDescription,
-          link: url,
-        };
-
-        const items = parsedFeed.querySelectorAll('item');
-        const itemsInfo = Array.from(items)
-          .map((item) => {
-            const title = item.querySelector('title').textContent;
-            const description = item.querySelector('description').textContent;
-            const link = item.querySelector('link').textContent;
-            return {
-              id: uniqueId(),
-              feedId,
-              seen: false,
-              title,
-              description,
-              link,
-            };
-          });
         watchedState.loadingProcess.status = 'success';
         watchedState.feeds.push(feed);
-        watchedState.posts = [...watchedState.posts, ...itemsInfo];
+        watchedState.posts = [...watchedState.posts, ...posts];
 
         updatePosts(watchedState, elements);
       })
