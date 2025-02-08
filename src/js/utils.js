@@ -10,7 +10,7 @@ export const xmlParse = (xml, url, feedId = null) => {
   // Для обработки ошибок
   if (errorNode) {
     throw new Error('invalid_xml');
-  } 
+  }
 
   const feed = {};
 
