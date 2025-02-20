@@ -4,6 +4,7 @@ import onChange from 'on-change';
 import i18next from 'i18next';
 import axios from 'axios';
 import 'bootstrap';
+import { uniqueId } from 'lodash';
 import ru from './locales/ru.js';
 import render from './view.js';
 import { xmlParse, validateUrl } from './utils.js';
@@ -18,8 +19,15 @@ const updatePosts = (state, elements) => {
           .filter((post) => post.feedId === feed.id)
           .map(({ link }) => link);
 
-        const { posts } = xmlParse(response.data.contents, feed.link, feed.id);
-        const newPosts = posts.filter(({ link }) => !oldPostsLinks.includes(link));
+        const { posts } = xmlParse(response.data.contents, feed.link);
+
+        const newPosts = posts
+          .filter(({ link }) => !oldPostsLinks.includes(link))
+          .map((post) => ({
+            id: uniqueId(),
+            feedId: feed.id,
+            ...post,
+          }));
         state.posts.push(...newPosts);
       }));
     const promise = Promise.all(promises);
@@ -90,6 +98,8 @@ export default () => {
 
   const watchedState = onChange(initialState, render(elements, initialState));
 
+  updatePosts(watchedState, elements);
+
   elements.form.addEventListener('submit', (event) => {
     event.preventDefault();
     // Сделал чтобы задоджить ситуацию описанную в ТГ
@@ -123,15 +133,22 @@ export default () => {
         watchedState.loadingProcess.error = '';
 
         const { feed, posts } = xmlParse(response.data.contents, url);
+
+        feed.id = uniqueId();
+
+        const postsWithId = posts.map((post) => ({
+          id: uniqueId(),
+          feedId: feed.id,
+          ...post,
+        }));
+
         // Ошибки можно обработать внутри внутри xmlParse
         watchedState.parsingProcess.status = 'success';
         watchedState.parsingProcess.error = '';
 
         watchedState.loadingProcess.status = 'success';
         watchedState.feeds.push(feed);
-        watchedState.posts = [...watchedState.posts, ...posts];
-
-        updatePosts(watchedState, elements);
+        watchedState.posts = [...watchedState.posts, ...postsWithId];
       })
       .catch((error) => {
         console.log(error);

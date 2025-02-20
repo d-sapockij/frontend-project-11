@@ -1,8 +1,6 @@
 import { string, setLocale } from 'yup';
-import { uniqueId } from 'lodash';
 
-export const xmlParse = (xml, url, feedId = null) => {
-// export const xmlParse = (xml, url) => {
+export const xmlParse = (xml, url) => {
   const parser = new DOMParser();
   const parsedXml = parser.parseFromString(xml, 'application/xml');
 
@@ -12,14 +10,11 @@ export const xmlParse = (xml, url, feedId = null) => {
     throw new Error('invalid_xml');
   }
 
-  const feed = {};
-
-  if (!feedId) {
-    feed.id = uniqueId();
-    feed.title = parsedXml.querySelector('title').textContent;
-    feed.description = parsedXml.querySelector('description').textContent;
-    feed.link = url;
-  }
+  const feed = {
+    title: parsedXml.querySelector('title').textContent,
+    description: parsedXml.querySelector('description').textContent,
+    link: url,
+  };
 
   const items = parsedXml.querySelectorAll('item');
   const posts = Array.from(items)
@@ -28,8 +23,6 @@ export const xmlParse = (xml, url, feedId = null) => {
       const description = item.querySelector('description').textContent;
       const link = item.querySelector('link').textContent;
       return {
-        id: uniqueId(),
-        feedId: feedId || feed.id,
         seen: false,
         title,
         description,

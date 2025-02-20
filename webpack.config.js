@@ -15,7 +15,8 @@ export default {
   output: {
     path: path.resolve(__dirname, 'dist'),
   },
-  mode: process.env.NODE_ENV,
+  // mode: process.env.NODE_ENV,
+  mode: 'development',
   devServer: {
     open: true,
     host: 'localhost',
