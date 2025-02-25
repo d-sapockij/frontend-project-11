@@ -19,7 +19,7 @@ const updatePosts = (state, elements) => {
           .filter((post) => post.feedId === feed.id)
           .map(({ link }) => link);
 
-        const { posts } = xmlParse(response.data.contents, feed.link);
+        const { posts } = xmlParse(response.data.contents);
 
         const newPosts = posts
           .filter(({ link }) => !oldPostsLinks.includes(link))
@@ -116,25 +116,34 @@ export default () => {
     const url = formData.get('url');
     const currentUrls = watchedState.feeds.map(({ link }) => link);
     validateUrl(url, currentUrls)
-      .then(() => {
+      .then((error) => {
         watchedState.form.isValid = true;
         watchedState.form.error = '';
-
-        watchedState.loadingProcess.status = 'loading';
+        if (error) {
+          console.log(`error: ${error}`)
+          watchedState.form.error = error;
+          watchedState.form.isValid = false;
+        } else {
+          console.log('no error')
+          watchedState.form.isValid = true;
+          watchedState.form.error = '';
+          watchedState.loadingProcess.status = 'loading';
+          watchedState.loadingProcess.error = '';
+          return axios.get(`https://allorigins.hexlet.app/get?disableCache=true&url=${url}`);
+        }
+      })
+      .then((response) => {
+          console.log('next thenn')
+        watchedState.loadingProcess.status = 'success';
         watchedState.loadingProcess.error = '';
 
         watchedState.parsingProcess.status = 'idle';
         watchedState.parsingProcess.error = '';
 
-        return axios.get(`https://allorigins.hexlet.app/get?disableCache=true&url=${url}`);
-      })
-      .then((response) => {
-        watchedState.loadingProcess.status = 'success';
-        watchedState.loadingProcess.error = '';
-
-        const { feed, posts } = xmlParse(response.data.contents, url);
+        const { feed, posts } = xmlParse(response.data.contents);
 
         feed.id = uniqueId();
+        feed.link = url;
 
         const postsWithId = posts.map((post) => ({
           id: uniqueId(),
@@ -152,16 +161,17 @@ export default () => {
       })
       .catch((error) => {
         console.log(error);
+        // Добавить 
         if (axios.isAxiosError(error)) {
           watchedState.loadingProcess.error = 'network_error';
           watchedState.loadingProcess.status = 'fail';
           // добавить обработку чтобы если запрос длился больше 10 секунд axios отдавал ошибку
-        } else if (error.message === 'invalid_xml') {
-          watchedState.parsingProcess.error = error.message;
+        } else if (error.isParsingError) {
+          watchedState.parsingProcess.error = 'invalid_xml';
           watchedState.parsingProcess.status = 'fail';
-        } else {
-          watchedState.form.error = error.message;
-          watchedState.form.isValid = false;
+        // } else if (error.message === 'invalid_xml') {
+        //   watchedState.parsingProcess.error = error.message;
+        //   watchedState.parsingProcess.status = 'fail';
         }
         // попробую вынести это в общий блок для общей обработки в view
         // watchedState.form.isValid = false;

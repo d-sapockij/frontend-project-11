@@ -1,19 +1,20 @@
 import { string, setLocale } from 'yup';
 
-export const xmlParse = (xml, url) => {
+export const xmlParse = (xml) => {
   const parser = new DOMParser();
   const parsedXml = parser.parseFromString(xml, 'application/xml');
 
   const errorNode = parsedXml.querySelector('parsererror');
   // Для обработки ошибок
   if (errorNode) {
-    throw new Error('invalid_xml');
+    const error = new Error(errorNode.textContent);
+    error.isParsingError = true;
+    throw error;
   }
 
   const feed = {
     title: parsedXml.querySelector('title').textContent,
     description: parsedXml.querySelector('description').textContent,
-    link: url,
   };
 
   const items = parsedXml.querySelectorAll('item');
@@ -23,7 +24,6 @@ export const xmlParse = (xml, url) => {
       const description = item.querySelector('description').textContent;
       const link = item.querySelector('link').textContent;
       return {
-        seen: false,
         title,
         description,
         link,
@@ -37,16 +37,14 @@ export const validateUrl = (url, urlsList) => {
     string: {
       url: 'invalid_url',
     },
+    mixed: {
+      notOneOf: 'duplicated_url',
+    },
   });
 
-  const schema = string().url().nullable();
+  const schema = string().url().required().notOneOf(urlsList);
   // Проверка на корректность url и на наличие дублей в стейте
   return schema.validate(url)
-    .then(() => {
-      urlsList.forEach((item) => {
-        if (item === url) {
-          throw new Error('duplicated_url');
-        }
-      });
-    });
+    .then(() => null)
+    .catch((e) => e.message);
 };
