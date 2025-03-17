@@ -1,4 +1,6 @@
+import axios from 'axios';
 import { string, setLocale } from 'yup';
+import { uniqueId } from 'lodash';
 
 export const xmlParse = (xml) => {
   const parser = new DOMParser();
@@ -32,6 +34,29 @@ export const xmlParse = (xml) => {
   return { feed, posts };
 };
 
+export const loadRss = (url) => axios.get(`https://allorigins.hexlet.app/get?disableCache=true&url=${url}`)
+  .then((response) => {
+    const { feed, posts } = xmlParse(response.data.contents);
+
+    feed.id = uniqueId();
+    feed.link = url;
+
+    const postsWithId = posts.map((post) => ({
+      id: uniqueId(),
+      feedId: feed.id,
+      ...post,
+    }));
+
+    return { feed, postsWithId };
+  })
+  .catch((error) => {
+    if (axios.isAxiosError(error)) {
+      throw new Error('network_error');
+    } else if (error.isParsingError) {
+      throw new Error('invalid_xml');
+    }
+  });
+
 export const validateUrl = (url, urlsList) => {
   setLocale({
     string: {
@@ -45,6 +70,9 @@ export const validateUrl = (url, urlsList) => {
   const schema = string().url().required().notOneOf(urlsList);
   // Проверка на корректность url и на наличие дублей в стейте
   return schema.validate(url)
-    .then(() => null)
-    .catch((e) => e.message);
+    .catch((error) => {
+      const e = new Error(error.message);
+      e.isValidateError = true;
+      throw e;
+    });
 };

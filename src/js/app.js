@@ -7,24 +7,21 @@ import 'bootstrap';
 import { uniqueId } from 'lodash';
 import ru from './locales/ru.js';
 import render from './view.js';
-import { xmlParse, validateUrl } from './utils.js';
+import { xmlParse, validateUrl, loadRss } from './utils.js';
 
 const updatePosts = (state, elements) => {
   console.log(state);
   setTimeout(() => {
     console.log('updating');
-    const promises = state.feeds.map((feed) => axios.get(`https://allorigins.hexlet.app/get?disableCache=true&url=${feed.link}`)
-      .then((response) => {
+    const promises = state.feeds.map((feed) => loadRss(feed.link)
+      .then(({ posts }) => {
         const oldPostsLinks = state.posts
           .filter((post) => post.feedId === feed.id)
           .map(({ link }) => link);
 
-        const { posts } = xmlParse(response.data.contents);
-
         const newPosts = posts
           .filter(({ link }) => !oldPostsLinks.includes(link))
           .map((post) => ({
-            id: uniqueId(),
             feedId: feed.id,
             ...post,
           }));
@@ -51,11 +48,11 @@ export default () => {
       error: '',
     },
     // Добавил parsingProcess потому что надо завязаться на что-то когда буду очищать инпут
-    parsingProcess: {
-      status: 'idle',
-      // success, fail
-      error: '',
-    },
+    // parsingProcess: {
+    //   status: 'idle',
+    // success, fail
+    // error: '',
+    // },
     feeds: [],
     posts: [],
   };
@@ -102,81 +99,37 @@ export default () => {
 
   elements.form.addEventListener('submit', (event) => {
     event.preventDefault();
-    // Сделал чтобы задоджить ситуацию описанную в ТГ
-    // Поискать в избранном по подстроке:
-    // крч проблема, когда не зануляется в стэйте состояние парсинга
-    // watchedState.form.isValid = true;
-    // watchedState.form.error = '';
-    // watchedState.loadingProcess.status = 'idle';
-    // watchedState.loadingProcess.error = '';
-    // watchedState.parsingProcess.status = 'idle';
-    // watchedState.parsingProcess.error = '';
 
     const formData = new FormData(event.target);
     const url = formData.get('url');
     const currentUrls = watchedState.feeds.map(({ link }) => link);
     validateUrl(url, currentUrls)
-      .then((error) => {
+      .then(() => {
         watchedState.form.isValid = true;
         watchedState.form.error = '';
-        if (error) {
-          console.log(`error: ${error}`)
-          watchedState.form.error = error;
-          watchedState.form.isValid = false;
-        } else {
-          console.log('no error')
-          watchedState.form.isValid = true;
-          watchedState.form.error = '';
-          watchedState.loadingProcess.status = 'loading';
-          watchedState.loadingProcess.error = '';
-          return axios.get(`https://allorigins.hexlet.app/get?disableCache=true&url=${url}`);
-        }
+        watchedState.loadingProcess.status = 'loading';
+        watchedState.loadingProcess.error = '';
+
+        return loadRss(url);
       })
-      .then((response) => {
-          console.log('next thenn')
+      .then(({ feed, postsWithId }) => {
         watchedState.loadingProcess.status = 'success';
         watchedState.loadingProcess.error = '';
 
-        watchedState.parsingProcess.status = 'idle';
-        watchedState.parsingProcess.error = '';
-
-        const { feed, posts } = xmlParse(response.data.contents);
-
-        feed.id = uniqueId();
-        feed.link = url;
-
-        const postsWithId = posts.map((post) => ({
-          id: uniqueId(),
-          feedId: feed.id,
-          ...post,
-        }));
-
-        // Ошибки можно обработать внутри внутри xmlParse
-        watchedState.parsingProcess.status = 'success';
-        watchedState.parsingProcess.error = '';
-
-        watchedState.loadingProcess.status = 'success';
         watchedState.feeds.push(feed);
         watchedState.posts = [...watchedState.posts, ...postsWithId];
       })
       .catch((error) => {
         console.log(error);
-        // Добавить 
-        if (axios.isAxiosError(error)) {
-          watchedState.loadingProcess.error = 'network_error';
-          watchedState.loadingProcess.status = 'fail';
-          // добавить обработку чтобы если запрос длился больше 10 секунд axios отдавал ошибку
-        } else if (error.isParsingError) {
-          watchedState.parsingProcess.error = 'invalid_xml';
-          watchedState.parsingProcess.status = 'fail';
-        // } else if (error.message === 'invalid_xml') {
-        //   watchedState.parsingProcess.error = error.message;
-        //   watchedState.parsingProcess.status = 'fail';
-        }
-        // попробую вынести это в общий блок для общей обработки в view
-        // watchedState.form.isValid = false;
-      });
 
+        if (error.isValidateError) {
+          watchedState.form.isValid = false;
+          watchedState.form.error = error.message;
+        } else {
+          watchedState.loadingProcess.status = 'fail';
+          watchedState.loadingProcess.error = error.message;
+        }
+      });
     // вынести коды ошибок в константы
   });
 

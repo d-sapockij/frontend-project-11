@@ -1,31 +1,13 @@
 import i18next from 'i18next';
 
-const handleProcessState = (value, elements) => {
+const handleLoadState = (value, elements) => {
   const isLoading = value === 'loading';
   // eslint-disable-next-line
   elements.fields.input.readOnly = isLoading;
   // eslint-disable-next-line
   elements.fields.button.disabled = isLoading;
 
-  switch (value) {
-    case 'success':
-      // elements.fields.input.classList.remove('is-invalid');
-      // elements.fields.input.value = '';
-      // elements.fields.input.focus();
-      break;
-    case 'fail':
-      // elements.fields.input.focus();
-      // elements.fields.input.select();
-      break;
-    default:
-    // внутри рендера не обрабатываются ошибки
-    // мб стоит добавить просто откат к дефолтным стилям
-  }
-};
-
-const handleParsingState = (value, elements) => {
   elements.fields.input.focus();
-
   switch (value) {
     case 'success':
       elements.fields.input.classList.remove('is-invalid');
@@ -45,6 +27,29 @@ const handleParsingState = (value, elements) => {
     // мб стоит добавить просто откат к дефолтным стилям
   }
 };
+
+// const handleParsingState = (value, elements) => {
+//   elements.fields.input.focus();
+
+//   switch (value) {
+//     case 'success':
+//       elements.fields.input.classList.remove('is-invalid');
+//       // eslint-disable-next-line
+//       elements.fields.input.value = '';
+//       // eslint-disable-next-line
+//       elements.feedbackEl.textContent = i18next.t('success');
+//       elements.feedbackEl.classList.remove('text-danger');
+//       elements.feedbackEl.classList.add('text-success');
+//       break;
+//     case 'fail':
+//       elements.fields.input.classList.add('is-invalid');
+//       elements.fields.input.select();
+//       break;
+//     default:
+//     // внутри рендера не обрабатываются ошибки
+//     // мб стоит добавить просто откат к дефолтным стилям
+//   }
+// };
 
 // const renderErrors = () => {
 
@@ -142,6 +147,8 @@ export default (elements, initialState) => (path, value) => {
 // не хочу (и не получается) обращаться к стейту,
 // будто бы стоит юзать только аргументы самого рендера (path, value, previousValue)
 
+  console.log(path, value);
+
   if (path === 'form.isValid') {
     if (value) {
       elements.fields.input.classList.remove('is-invalid');
@@ -156,12 +163,12 @@ export default (elements, initialState) => (path, value) => {
   // и обработки ошибок в принципе, хотя с этим уже лучше чем с рендером
 
   if (path === 'loadingProcess.status') {
-    handleProcessState(value, elements);
+    handleLoadState(value, elements);
   }
 
-  if (path === 'parsingProcess.status') {
-    handleParsingState(value, elements);
-  }
+  // if (path === 'parsingProcess.status') {
+  //   handleParsingState(value, elements);
+  // }
 
   if (path === 'form.error' || path === 'loadingProcess.error' || path === 'parsingProcess.error') {
     // eslint-disable-next-line
