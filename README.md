@@ -5,3 +5,5 @@
 [![Maintainability](https://api.codeclimate.com/v1/badges/9b5b6e00aa84b4c25a0a/maintainability)](https://codeclimate.com/github/d-sapockij/frontend-project-11/maintainability)
 
 [link to published project](https://rssagregator-tau.vercel.app/)
+
+RSS-aggregator is a web application that allows you to add and read RSS feeds, regularly updating posts. 
