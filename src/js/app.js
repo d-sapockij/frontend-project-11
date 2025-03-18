@@ -2,34 +2,31 @@
 
 import onChange from 'on-change';
 import i18next from 'i18next';
-import axios from 'axios';
 import 'bootstrap';
-import { uniqueId } from 'lodash';
 import ru from './locales/ru.js';
 import render from './view.js';
-import { xmlParse, validateUrl, loadRss } from './utils.js';
+import { validateUrl, loadRss } from './utils.js';
 
 const updatePosts = (state, elements) => {
   console.log(state);
   setTimeout(() => {
     console.log('updating');
+
     const promises = state.feeds.map((feed) => loadRss(feed.link)
-      .then(({ posts }) => {
+      .then(({ postsWithId: posts }) => {
         const oldPostsLinks = state.posts
           .filter((post) => post.feedId === feed.id)
           .map(({ link }) => link);
-
         const newPosts = posts
           .filter(({ link }) => !oldPostsLinks.includes(link))
           .map((post) => ({
-            feedId: feed.id,
             ...post,
+            feedId: feed.id,
           }));
         state.posts.push(...newPosts);
       }));
     const promise = Promise.all(promises);
     promise.then(() => updatePosts(state, elements));
-    // updatePosts(state, elements);
   }, 5000);
 };
 
@@ -41,18 +38,8 @@ export default () => {
     },
     loadingProcess: {
       status: 'idle',
-      // idle - статус который можно никак не обрабатывать,
-      // специальный статус который ничего не значит
-      // и нужен для начала приложения чтобы что-то было..
-      // loading, success, fail
       error: '',
     },
-    // Добавил parsingProcess потому что надо завязаться на что-то когда буду очищать инпут
-    // parsingProcess: {
-    //   status: 'idle',
-    // success, fail
-    // error: '',
-    // },
     feeds: [],
     posts: [],
   };
@@ -103,6 +90,7 @@ export default () => {
     const formData = new FormData(event.target);
     const url = formData.get('url');
     const currentUrls = watchedState.feeds.map(({ link }) => link);
+
     validateUrl(url, currentUrls)
       .then(() => {
         watchedState.form.isValid = true;
@@ -120,8 +108,6 @@ export default () => {
         watchedState.posts = [...watchedState.posts, ...postsWithId];
       })
       .catch((error) => {
-        console.log(error);
-
         if (error.isValidateError) {
           watchedState.form.isValid = false;
           watchedState.form.error = error.message;
@@ -129,8 +115,9 @@ export default () => {
           watchedState.loadingProcess.status = 'fail';
           watchedState.loadingProcess.error = error.message;
         }
+
+        console.log(error);
       });
-    // вынести коды ошибок в константы
   });
 
   elements.postsContainer.addEventListener('click', (event) => {

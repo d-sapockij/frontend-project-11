@@ -7,7 +7,6 @@ export const xmlParse = (xml) => {
   const parsedXml = parser.parseFromString(xml, 'application/xml');
 
   const errorNode = parsedXml.querySelector('parsererror');
-  // Для обработки ошибок
   if (errorNode) {
     const error = new Error(errorNode.textContent);
     error.isParsingError = true;
@@ -68,7 +67,6 @@ export const validateUrl = (url, urlsList) => {
   });
 
   const schema = string().url().required().notOneOf(urlsList);
-  // Проверка на корректность url и на наличие дублей в стейте
   return schema.validate(url)
     .catch((error) => {
       const e = new Error(error.message);

@@ -23,37 +23,8 @@ const handleLoadState = (value, elements) => {
       elements.fields.input.select();
       break;
     default:
-    // внутри рендера не обрабатываются ошибки
-    // мб стоит добавить просто откат к дефолтным стилям
   }
 };
-
-// const handleParsingState = (value, elements) => {
-//   elements.fields.input.focus();
-
-//   switch (value) {
-//     case 'success':
-//       elements.fields.input.classList.remove('is-invalid');
-//       // eslint-disable-next-line
-//       elements.fields.input.value = '';
-//       // eslint-disable-next-line
-//       elements.feedbackEl.textContent = i18next.t('success');
-//       elements.feedbackEl.classList.remove('text-danger');
-//       elements.feedbackEl.classList.add('text-success');
-//       break;
-//     case 'fail':
-//       elements.fields.input.classList.add('is-invalid');
-//       elements.fields.input.select();
-//       break;
-//     default:
-//     // внутри рендера не обрабатываются ошибки
-//     // мб стоит добавить просто откат к дефолтным стилям
-//   }
-// };
-
-// const renderErrors = () => {
-
-// };
 
 const createCardElem = () => {
   const card = document.createElement('div');
@@ -76,6 +47,7 @@ const createCardElem = () => {
 const renderPosts = (elements, posts) => {
   // eslint-disable-next-line
   elements.postsContainer.innerHTML = '';
+
   const { card, cardTitle, listGroup } = createCardElem();
   elements.postsContainer.appendChild(card);
   cardTitle.innerText = i18next.t('ui.posts.title');
@@ -103,15 +75,6 @@ const renderPosts = (elements, posts) => {
     button.dataset.id = id;
     button.textContent = i18next.t('ui.posts.button');
 
-    // Я НЕ ПОНИМАЮ.. Нельзя же изменять состояние изнутри рендера :///
-    // А в уроке Отрисовка (рендеринг) состояния говорится что:
-    // Рендеринг пользуется состоянием для отрисовки
-    // (добавление, изменение или удаление элементов) и добавляет новые обработчики в DOM
-
-    // linkElem.addEventListener('click', (event) => {
-    //   event.preventDefault();
-    //   console.log(event.target);
-    // })
     elem.append(linkElem, button);
     return elem;
   });
@@ -121,9 +84,11 @@ const renderPosts = (elements, posts) => {
 const renderFeeds = (elements, feeds) => {
   // eslint-disable-next-line
   elements.feedsContainer.innerHTML = '';
+
   const { card, cardTitle, listGroup } = createCardElem();
   elements.feedsContainer.appendChild(card);
   cardTitle.innerText = i18next.t('ui.feeds.title');
+
   const feedsElems = feeds.map(({ title, description }) => {
     const elem = document.createElement('li');
     elem.classList.add('list-group-item', 'border-0', 'border-end-0');
@@ -142,60 +107,44 @@ const renderFeeds = (elements, feeds) => {
 };
 
 export default (elements, initialState) => (path, value) => {
-// Я чувствую, что стоит пересмотреть логику рендера,
-// и разделить вывод ошибок и обработку стилей формы и тд
-// не хочу (и не получается) обращаться к стейту,
-// будто бы стоит юзать только аргументы самого рендера (path, value, previousValue)
-
-  console.log(path, value);
-
-  if (path === 'form.isValid') {
-    if (value) {
-      elements.fields.input.classList.remove('is-invalid');
-    } else {
-      elements.fields.input.classList.add('is-invalid');
-      elements.fields.input.focus();
-      elements.fields.input.select();
-    }
-  }
-
-  // Думаю нужно плотно переписывать логику рендера
-  // и обработки ошибок в принципе, хотя с этим уже лучше чем с рендером
-
-  if (path === 'loadingProcess.status') {
-    handleLoadState(value, elements);
-  }
-
-  // if (path === 'parsingProcess.status') {
-  //   handleParsingState(value, elements);
-  // }
-
-  if (path === 'form.error' || path === 'loadingProcess.error' || path === 'parsingProcess.error') {
-    // eslint-disable-next-line
-    elements.feedbackEl.textContent = value ? i18next.t(`errors.${value}`) : value;
-
-    elements.feedbackEl.classList.add('text-danger');
-    elements.feedbackEl.classList.remove('text-success');
-  }
-
-  if (path === 'posts') {
-    renderPosts(elements, initialState.posts);
-  }
-
-  if (path === 'feeds') {
-    renderFeeds(elements, initialState.feeds);
-  }
-
-  if (path === 'activeModal') {
-    initialState.posts.forEach((post) => {
-      if (post.id === value) {
-        // eslint-disable-next-line
-        elements.modalItems.title.textContent = post.title;
-        // eslint-disable-next-line
-        elements.modalItems.body.textContent = post.description;
-        // eslint-disable-next-line
-        elements.modalItems.submitButton.href = post.link;
+  switch (path) {
+    case 'form.isValid':
+      if (value) {
+        elements.fields.input.classList.remove('is-invalid');
+      } else {
+        elements.fields.input.classList.add('is-invalid');
+        elements.fields.input.focus();
+        elements.fields.input.select();
       }
-    });
+      break;
+    case 'loadingProcess.status':
+      handleLoadState(value, elements);
+      break;
+    case 'form.error':
+    case 'loadingProcess.error':
+      // eslint-disable-next-line
+      elements.feedbackEl.textContent = value ? i18next.t(`errors.${value}`) : value;
+      elements.feedbackEl.classList.add('text-danger');
+      elements.feedbackEl.classList.remove('text-success');
+      break;
+    case 'posts':
+      renderPosts(elements, initialState.posts);
+      break;
+    case 'feeds':
+      renderFeeds(elements, initialState.feeds);
+      break;
+    case 'activeModal':
+      initialState.posts.forEach((post) => {
+        if (post.id === value) {
+          // eslint-disable-next-line
+          elements.modalItems.title.textContent = post.title;
+          // eslint-disable-next-line
+          elements.modalItems.body.textContent = post.description;
+          // eslint-disable-next-line
+          elements.modalItems.submitButton.href = post.link;
+        }
+      });
+      break;
+    default:
   }
 };
