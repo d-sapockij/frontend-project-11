@@ -1,6 +1,4 @@
-import i18next from 'i18next';
-
-const handleLoadState = (value, elements) => {
+const handleLoadState = (value, elements, i18nextInstance) => {
   const isLoading = value === 'loading';
   // eslint-disable-next-line
   elements.fields.input.readOnly = isLoading;
@@ -14,7 +12,7 @@ const handleLoadState = (value, elements) => {
       // eslint-disable-next-line
       elements.fields.input.value = '';
       // eslint-disable-next-line
-      elements.feedbackEl.textContent = i18next.t('success');
+      elements.feedbackEl.textContent = i18nextInstance.t('success');
       elements.feedbackEl.classList.remove('text-danger');
       elements.feedbackEl.classList.add('text-success');
       break;
@@ -44,13 +42,13 @@ const createCardElem = () => {
   return { card, cardTitle, listGroup };
 };
 
-const renderPosts = (elements, posts) => {
+const renderPosts = (elements, posts, i18nextInstance) => {
   // eslint-disable-next-line
   elements.postsContainer.innerHTML = '';
 
   const { card, cardTitle, listGroup } = createCardElem();
   elements.postsContainer.appendChild(card);
-  cardTitle.innerText = i18next.t('ui.posts.title');
+  cardTitle.innerText = i18nextInstance.t('ui.posts.title');
   const postsElems = posts.map(({
     id, seen, title, link,
   }) => {
@@ -73,7 +71,7 @@ const renderPosts = (elements, posts) => {
     button.dataset.bsToggle = 'modal';
     button.dataset.bsTarget = '#modal';
     button.dataset.id = id;
-    button.textContent = i18next.t('ui.posts.button');
+    button.textContent = i18nextInstance.t('ui.posts.button');
 
     elem.append(linkElem, button);
     return elem;
@@ -81,13 +79,13 @@ const renderPosts = (elements, posts) => {
   listGroup.replaceChildren(...postsElems);
 };
 
-const renderFeeds = (elements, feeds) => {
+const renderFeeds = (elements, feeds, i18nextInstance) => {
   // eslint-disable-next-line
   elements.feedsContainer.innerHTML = '';
 
   const { card, cardTitle, listGroup } = createCardElem();
   elements.feedsContainer.appendChild(card);
-  cardTitle.innerText = i18next.t('ui.feeds.title');
+  cardTitle.innerText = i18nextInstance.t('ui.feeds.title');
 
   const feedsElems = feeds.map(({ title, description }) => {
     const elem = document.createElement('li');
@@ -106,7 +104,7 @@ const renderFeeds = (elements, feeds) => {
   listGroup.replaceChildren(...feedsElems);
 };
 
-export default (elements, initialState) => (path, value) => {
+export default (elements, initialState, i18nextInstance) => (path, value) => {
   switch (path) {
     case 'form.isValid':
       if (value) {
@@ -118,20 +116,20 @@ export default (elements, initialState) => (path, value) => {
       }
       break;
     case 'loadingProcess.status':
-      handleLoadState(value, elements);
+      handleLoadState(value, elements, i18nextInstance);
       break;
     case 'form.error':
     case 'loadingProcess.error':
       // eslint-disable-next-line
-      elements.feedbackEl.textContent = value ? i18next.t(`errors.${value}`) : value;
+      elements.feedbackEl.textContent = value ? i18nextInstance.t(`errors.${value}`) : value;
       elements.feedbackEl.classList.add('text-danger');
       elements.feedbackEl.classList.remove('text-success');
       break;
     case 'posts':
-      renderPosts(elements, initialState.posts);
+      renderPosts(elements, initialState.posts, i18nextInstance);
       break;
     case 'feeds':
-      renderFeeds(elements, initialState.feeds);
+      renderFeeds(elements, initialState.feeds, i18nextInstance);
       break;
     case 'activeModal':
       initialState.posts.forEach((post) => {

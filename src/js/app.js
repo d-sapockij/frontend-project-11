@@ -64,23 +64,23 @@ export default () => {
     },
   };
 
-  // тут инстанс добавить
-  i18next.init({
+  const i18nextInstance = i18next.createInstance();
+  i18nextInstance.init({
     lng: 'ru',
     debug: true,
     resources: {
       ru,
     },
   }).then(() => {
-    elements.h1.textContent = i18next.t('ui.header');
-    elements.subtitle.textContent = i18next.t('ui.subtitle');
-    elements.fields.input.placeholder = i18next.t('ui.placeholder');
-    elements.fields.button.textContent = i18next.t('ui.button');
-    elements.modalItems.submitButton.textContent = i18next.t('ui.modal.submitButton');
-    elements.modalItems.closeButton.textContent = i18next.t('ui.modal.closeButton');
+    elements.h1.textContent = i18nextInstance.t('ui.header');
+    elements.subtitle.textContent = i18nextInstance.t('ui.subtitle');
+    elements.fields.input.placeholder = i18nextInstance.t('ui.placeholder');
+    elements.fields.button.textContent = i18nextInstance.t('ui.button');
+    elements.modalItems.submitButton.textContent = i18nextInstance.t('ui.modal.submitButton');
+    elements.modalItems.closeButton.textContent = i18nextInstance.t('ui.modal.closeButton');
   });
 
-  const watchedState = onChange(initialState, render(elements, initialState));
+  const watchedState = onChange(initialState, render(elements, initialState, i18nextInstance));
 
   updatePosts(watchedState, elements);
 
